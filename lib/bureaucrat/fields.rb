@@ -180,6 +180,50 @@ module Bureaucrat
 
     end
 
+    class FormField
+      attr :form
+
+      def initialize(form_class)
+        @form_class = form_class
+      end
+
+      def label; end
+      def help_text; end
+      def show_hidden_initial; end
+
+      def widget
+        widget = Widgets::Form.new
+        widget.form = self
+        widget
+      end
+
+      def prepare_value(value)
+        value
+      end
+
+      def to_object(value)
+        value
+      end
+
+      def clean(value)
+        @form = @form_class.new(value)
+        @form.valid?
+        @form.cleaned_data
+      end
+
+      def each(&block)
+        form.each(&block)
+      end
+
+      def populate_object(object, name, value)
+        setter = :"#{name}="
+
+        if object.respond_to?(setter)
+          object.send(setter, value)
+        end
+      end
+    end
+
     class CharField < Field
       attr_accessor :max_length, :min_length
 

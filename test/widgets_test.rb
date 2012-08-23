@@ -345,4 +345,40 @@ module WidgetTests
     end
   end
 
+  class Test_Form_widget < BureaucratTestCase
+    class MyForm < Forms::Form
+      include ::Bureaucrat::Fields
+
+      field :color, CharField.new(required: true)
+      field :number, CharField.new(required: true)
+    end
+
+    class Test_with_empty_attributes < BureaucratTestCase
+      def test_correctly_render
+        widget = Widgets::Form.new
+        widget.form = MyForm.new
+        expected = normalize_html(%Q{<input type="text" value="blue" name="test[color]" />\n<input type="text" value="10" name="test[number]" />})
+        rendered = normalize_html(widget.render('test', {"color" => "blue", "number" => "10"}))
+        assert_equal(expected, rendered)
+      end
+    end
+
+    class Test_without_value < BureaucratTestCase
+      def test_not_render_a_value
+        widget = Widgets::Form.new
+        widget.form = MyForm.new
+        expected = normalize_html(%Q{<input type="text" name="test[color]" />\n<input type="text" name="test[number]" />})
+        rendered = normalize_html(widget.render('test', {}))
+        assert_equal(expected, rendered)
+      end
+    end
+
+    class Test_when_copied < BureaucratTestCase
+      def test_have_a_copy_of_the_attributes
+        w1 = Widgets::Form.new(attribute: 2)
+        w2 = w1.dup
+        assert_not_equal(w1.attrs.object_id, w2.attrs.object_id)
+      end
+    end
+  end
 end

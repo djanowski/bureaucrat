@@ -51,6 +51,22 @@ module Bureaucrat
       end
     end
 
+    class Form < Widget
+      attr_accessor :form
+
+      def render(name, value, attrs = nil)
+        buffer = []
+
+        value = StringAccessHash.new(value)
+
+        form.each do |field|
+          buffer << field.field.widget.render("%s[%s]" % [name, field.name], value[field.name])
+        end
+
+        buffer.join("\n")
+      end
+    end
+
     # Base class for input widgets
     class Input < Widget
       def render(name, value, attrs=nil)

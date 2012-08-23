@@ -148,4 +148,63 @@ module FormTests
       assert_equal(nil, obj.number)
     end
   end
+
+  class Test_nesting_forms < BureaucratTestCase
+    class AttrsForm < Forms::Form
+      include Bureaucrat::Fields
+
+      field :color, CharField.new(required: true)
+      field :number, CharField.new(required: true)
+    end
+
+    class NestedForm < Forms::Form
+      include Bureaucrat::Fields
+
+      field :name, CharField.new(required: false)
+      field :attrs, FormField.new(AttrsForm)
+    end
+
+    def test_correctly_populate_an_object_with_all_fields
+      obj = Struct.new(:name, :attrs).new
+
+      name = "The Name"
+      attrs = {"color" => "Black", "number" => "10"}
+
+      form = NestedForm.new(name: name, attrs: attrs)
+
+      assert form.valid?
+
+      form.populate_object(obj)
+
+      assert_equal(name, obj.name)
+      assert_equal(attrs, obj.attrs)
+    end
+
+    def test_correctly_populate_an_object_without_all_fields
+      obj = Struct.new(:name).new
+      name = 'The Name'
+
+      form = NestedForm.new(name: name,
+                            attrs: {"color" => "blue"})
+
+      assert form.valid?
+
+      form.populate_object(obj)
+
+      assert_equal(name, obj.name)
+    end
+
+    def test_correctly_populate_an_object_with_all_fields_with_some_missing_values
+      obj = Struct.new(:name, :attrs).new('a', {"color" => 'b', "number" => 2})
+
+      form = NestedForm.new({})
+
+      assert form.valid?
+
+      form.populate_object(obj)
+
+      assert_equal('', obj.name)
+      assert_equal(nil, obj.attrs)
+    end
+  end
 end
